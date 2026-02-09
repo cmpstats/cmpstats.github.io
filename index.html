@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CMPStats</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --accent: #1e40af;
+      --accent-hover: #1d4ed8;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #334155;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+    
+    .container {
+      max-width: 900px;
+      width: 100%;
+      text-align: center;
+    }
+    
+    h1 {
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #60a5fa, #1e40af);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .description {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      text-align: left;
+      line-height: 1.6;
+    }
+    
+    .districts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+    
+    .district-btn {
+      background: var(--bg-card);
+      border: 2px solid var(--accent);
+      color: var(--text);
+      padding: 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 60px;
+    }
+    
+    .district-btn:hover {
+      background: var(--accent);
+      transform: translateY(-2px);
+    }
+    
+    .credits {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+    }
+    
+    .credits a {
+      color: #60a5fa;
+      text-decoration: none;
+    }
+    
+    .credits a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>CMPStats</h1>
+    <p class="subtitle">District Championship Qualification Tracker</p>
+    
+    <div class="description">
+      <p>See which FRC teams are locked into their district championships. Uses live data from <a href="https://www.thebluealliance.com" target="_blank" style="color:#60a5fa">The Blue Alliance</a>.</p>
+      <p style="margin-top:1rem"><strong>Lock %</strong> = chance a team qualifies based on current standings and remaining points.</p>
+    </div>
+    
+    <div class="districts">
+      <a href="chs.html" class="district-btn">Chesapeake</a>
+      <a href="in.html" class="district-btn">Indiana</a>
+      <a href="isr.html" class="district-btn">Israel</a>
+      <a href="fim.html" class="district-btn">Michigan</a>
+      <a href="fma.html" class="district-btn">Mid-Atlantic</a>
+      <a href="ne.html" class="district-btn">New England</a>
+      <a href="fnc.html" class="district-btn">North Carolina</a>
+      <a href="ont.html" class="district-btn">Ontario</a>
+      <a href="pch.html" class="district-btn">Peachtree</a>
+      <a href="pnw.html" class="district-btn">Pacific NW</a>
+      <a href="tx.html" class="district-btn">Texas</a>
+      <a href="ca.html" class="district-btn">California</a>
+      <a href="sc.html" class="district-btn">South Carolina</a>
+      <a href="wi.html" class="district-btn">Wisconsin</a>
+    </div>
+    
+    <div class="credits">
+      <p>By <a href="https://github.com/sdphadke" target="_blank">Sanchit Phadke</a> / 
+         <a href="https://www.thebluealliance.com/team/9317" target="_blank">FRC 9317</a> (current) / 
+         <a href="https://www.thebluealliance.com/team/5827" target="_blank">FRC 5827</a> (former) / 
+         FLL 52060</p>
+      <p style="margin-top:0.5rem">Based on <a href="https://frclocks.com" target="_blank">frclocks.com</a></p>
+    </div>
+  </div>
+</body>
+</html>
