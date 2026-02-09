@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CMPStats - California WCMP</title>
+  <link rel="icon" href="../../logo.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg-dark: #0f172a; --bg-card: #1e293b; --accent: #1e40af; --text: #f1f5f9; --text-muted: #94a3b8; --border: #334155; --locked: #34d399; --contention: #fbbf24; --eliminated: #f87171; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .back-btn { display: inline-block; color: var(--text-muted); text-decoration: none; margin-bottom: 1rem; font-size: 0.9rem; }
+    .back-btn:hover { color: var(--text); }
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(135deg, #60a5fa, #1e40af); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: var(--text-muted); font-size: 1rem; margin-bottom: 1.5rem; }
+    .frozen-badge { display: inline-block; background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600; margin-left: 1rem; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-align: center; }
+    .stat-label { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-value { font-size: 1.75rem; font-weight: 700; color: #60a5fa; margin-top: 0.25rem; }
+    h2 { font-size: 1.25rem; margin: 1.5rem 0 1rem; color: var(--text-muted); }
+    table { width: 100%; border-collapse: collapse; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 2rem; }
+    th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: var(--accent); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background: rgba(30, 64, 175, 0.1); }
+    a { color: #60a5fa; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .status-locked { color: var(--locked); font-weight: 600; }
+    .status-contention { color: var(--contention); font-weight: 600; }
+    .status-eliminated { color: var(--eliminated); font-weight: 600; }
+    .loading { color: var(--text-muted); font-style: italic; }
+    .error { color: #f87171; padding: 1rem; }
+    .legend { display: flex; gap: 1.5rem; margin-bottom: 1rem; font-size: 0.9rem; }
+    .legend-item { display: flex; align-items: center; gap: 0.5rem; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-locked { background: var(--locked); }
+    .dot-contention { background: var(--contention); }
+    .dot-eliminated { background: var(--eliminated); }
+    @media (max-width: 768px) { .ranks-table th:nth-child(5), .ranks-table td:nth-child(5) { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../" class="back-btn">← back to district</a>
+    <h1>California WCMP <span id="frozenBadge" style="display:none;" class="frozen-badge">✓ FROZEN</span></h1>
+    <p class="subtitle">World Championship Qualification</p>
+    <div class="stats">
+      <div class="stat-card"><div class="stat-label">DCMP Slots</div><div class="stat-value" id="dcmpSlots">60</div></div>
+      <div class="stat-card"><div class="stat-label">Worlds Slots</div><div class="stat-value" id="worldsSlots">~20</div></div>
+    </div>
+    <h2>DCMP Event</h2>
+    <table class="events-table">
+      <thead><tr><th>Event</th><th>Week</th><th>Status</th><th>Pts Available</th></tr></thead>
+      <tbody id="eventsBody"><tr><td colspan="4" class="loading">Loading...</td></tr></tbody>
+    </table>
+    <h2>Team Rankings (Worlds Qualification)</h2>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot dot-locked"></div><span>Locked (qualified)</span></div>
+      <div class="legend-item"><div class="legend-dot dot-contention"></div><span>In contention</span></div>
+      <div class="legend-item"><div class="legend-dot dot-eliminated"></div><span>Eliminated</span></div>
+    </div>
+    <table class="ranks-table">
+      <thead><tr><th>Rank</th><th>Team</th><th>E1</th><th>E2</th><th>DCMP</th><th>Total</th><th>Status</th></tr></thead>
+      <tbody id="ranksBody"><tr><td colspan="7" class="loading">Loading...</td></tr></tbody>
+    </table>
+  </div>
+<script>
+const TBA_API_KEY = 'z8FSCVQr1QXVxRFn6GgWOfmVrTtQQ1GUxvs78aCgrigr6JqQaZZRdET6AIZ9Gm80';
+const YEAR = 2026, DISTRICT = 'ca', SLOTS = 60, DCMP_EVENT_TYPE = 2;
+const eventTypeNames = {0:"Regional",1:"District",2:"DCMP",3:"Champs",4:"Finals",5:"Qualifier",6:"Offseason"};
+function safe(val) { return (val === null || val === undefined || Number.isNaN(val)) ? '-' : val; }
+function safeNum(val) { return (val === null || val === undefined || Number.isNaN(val)) ? 0 : Number(val); }
+async function fetchTBA(endpoint) {
+  try {
+    const res = await fetch(`https://www.thebluealliance.com/api/v3${endpoint}`, {headers:{'X-TBA-Auth-Key':TBA_API_KEY}});
+    if (!res.ok) throw new Error('API error');
+    return await res.json();
+  } catch(e) { console.error(e); return []; }
+}
+async function fetchTeamAwards(teamKey) {
+  try {
+    const res = await fetch(`https://www.thebluealliance.com/api/v3/team/${teamKey}/awards/${YEAR}`, {headers:{'X-TBA-Auth-Key':TBA_API_KEY}});
+    if (!res.ok) return [];
+    return await res.json();
+  } catch(e) { return []; }
+}
+function getWeek(startDate) {
+  if (!startDate) return '-';
+  const date = new Date(startDate);
+  const weekNum = Math.floor((date - new Date(YEAR, 2, 1)) / (7 * 24 * 60 * 60 * 1000)) + 1;
+  return weekNum > 0 ? `W${weekNum}` : '-';
+}
+function hasQualifyingAward(awards) {
+  const qualifyingAwards = ['Chairman\'s Award', 'Engineering Inspiration Award', 'Rookie All Star Award', 'District Championship Chairman\'s Award', 'District Championship Engineering Inspiration Award'];
+  return awards.some(a => qualifyingAwards.includes(a.name));
+}
+function getStatusClass(status) {
+  if (status === 'locked') return 'status-locked';
+  if (status === 'contention') return 'status-contention';
+  return 'status-eliminated';
+}
+function getStatusText(status) {
+  if (status === 'locked') return '✓ Locked';
+  if (status === 'contention') return 'In Contention';
+  return 'Eliminated';
+}
+async function loadWCMP() {
+  const [rankings, events] = await Promise.all([fetchTBA(`/district/${YEAR}${DISTRICT}/rankings`), fetchTBA(`/district/${YEAR}${DISTRICT}/events`)]);
+  const now = new Date();
+  const dcmpEvents = events.filter(e => e.event_type === DCMP_EVENT_TYPE);
+  const dcmpDone = dcmpEvents.length > 0 && dcmpEvents.every(e => now > new Date(e.end_date));
+  if (dcmpDone) document.getElementById('frozenBadge').style.display = 'inline-block';
+  if (!dcmpEvents || dcmpEvents.length === 0) {
+    document.getElementById('eventsBody').innerHTML = '<tr><td colspan="4" class="error">No DCMP event found</td></tr>';
+  } else {
+    const eventsHtml = dcmpEvents.map(e => {
+      const start = new Date(e.start_date), end = new Date(e.end_date);
+      let status = 'Upcoming';
+      if (now > end) status = 'Done';
+      else if (now >= start) status = 'Active';
+      return `<tr><td><a href="https://www.thebluealliance.com/event/${e.key}" target="_blank">${e.name}</a></td><td>${getWeek(e.start_date)}</td><td>${status}</td><td>0</td></tr>`;
+    }).join('');
+    document.getElementById('eventsBody').innerHTML = eventsHtml;
+  }
+  if (!rankings || rankings.length === 0) {
+    document.getElementById('ranksBody').innerHTML = '<tr><td colspan="7" class="error">No rankings available</td></tr>';
+  } else {
+    const sorted = rankings.sort((a,b) => safeNum(b.point_total) - safeNum(a.point_total));
+    const teamAwards = {};
+    await Promise.all(sorted.slice(0, Math.min(sorted.length, SLOTS + 20)).map(async (t) => { const awards = await fetchTeamAwards(t.team_key); teamAwards[t.team_key] = hasQualifyingAward(awards); }));
+    const worldsSlots = Math.min(20, Math.floor(SLOTS / 3));
+    const ranksHtml = sorted.map((t,i) => {
+      const rank = i + 1;
+      const cutoffIn = safeNum(sorted[worldsSlots-1]?.point_total);
+      const cutoffOut = safeNum(sorted[worldsSlots]?.point_total);
+      const gap = safeNum(t.point_total) - cutoffOut;
+      const behind = cutoffIn - safeNum(t.point_total);
+      let status = 'eliminated';
+      const hasAward = teamAwards[t.team_key];
+      if (rank <= worldsSlots) { if (gap > 0 || hasAward) status = 'locked'; else status = 'contention'; }
+      else { if (behind <= 50 || hasAward) status = 'contention'; }
+      if (hasAward) status = 'locked';
+      const e1 = safe(t.event_points?.[0]?.total), e2 = safe(t.event_points?.[1]?.total), dcmp = safeNum(t.dcmp_points?.total), total = safe(t.point_total);
+      return `<tr><td>${rank}</td><td><a href="https://www.thebluealliance.com/team/${t.team_key?.slice(3)}" target="_blank">${t.team_key?.slice(3) || '-'}</a></td><td>${e1}</td><td>${e2}</td><td>${dcmp || '-'}</td><td>${total}</td><td class="${getStatusClass(status)}">${getStatusText(status)}</td></tr>`;
+    }).join('');
+    document.getElementById('ranksBody').innerHTML = ranksHtml;
+  }
+}
+loadWCMP();
+</script>
+</body>
+</html>

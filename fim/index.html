@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CMPStats - Michigan</title>
+  <link rel="icon" href="../logo.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg-dark: #0f172a; --bg-card: #1e293b; --accent: #1e40af; --accent-hover: #1d4ed8; --text: #f1f5f9; --text-muted: #94a3b8; --border: #334155; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
+    .container { max-width: 600px; width: 100%; text-align: center; }
+    .back-btn { display: inline-block; color: var(--text-muted); text-decoration: none; margin-bottom: 2rem; font-size: 0.9rem; }
+    .back-btn:hover { color: var(--text); }
+    h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(135deg, #60a5fa, #1e40af); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 3rem; }
+    .buttons { display: flex; flex-direction: column; gap: 1.5rem; }
+    .btn { background: var(--bg-card); border: 2px solid var(--accent); color: var(--text); padding: 1.5rem; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 1.25rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.75rem; }
+    .btn:hover { background: var(--accent); transform: translateY(-2px); }
+    .btn-icon { font-size: 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="back-btn">← back to home</a>
+    <h1>Michigan</h1>
+    <p class="subtitle">Select a championship to view</p>
+    <div class="buttons">
+      <a href="dcmp/" class="btn"><span class="btn-icon">🏆</span><span>District Championship (DCMP)</span></a>
+      <a href="wcmp/" class="btn"><span class="btn-icon">🌍</span><span>World Championship (WCMP)</span></a>
+    </div>
+  </div>
+</body>
+</html>
