@@ -128,7 +128,10 @@ async function loadWCMP() {
   if (!rankings || rankings.length === 0) {
     document.getElementById('ranksBody').innerHTML = '<tr><td colspan="7" class="error">No rankings available</td></tr>';
   } else {
-    const sorted = rankings.sort((a,b) => safeNum(b.point_total) - safeNum(a.point_total));
+    const const teamAwards = {};
+    await Promise.all(rankings.map(async (t) => { const awards = await fetchTeamAwards(t.team_key); teamAwards[t.team_key] = hasQualifyingAward(awards); }));
+    const worldsQualifiers = rankings.filter(t => safeNum(t.dcmp_points?.total) > 0 || teamAwards[t.team_key]);
+    const sorted = worldsQualifiers.sort((a,b) => safeNum(b.dcmp_points?.total) - safeNum(a.dcmp_points?.total));
     const teamAwards = {};
     await Promise.all(sorted.slice(0, Math.min(sorted.length, SLOTS + 20)).map(async (t) => { const awards = await fetchTeamAwards(t.team_key); teamAwards[t.team_key] = hasQualifyingAward(awards); }));
     const worldsSlots = Math.min(20, Math.floor(SLOTS / 3));

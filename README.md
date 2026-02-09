@@ -1,6 +1,6 @@
 # CMPStats
 
-**CMPStats** is a web application for tracking FIRST Robotics Competition (FRC) district championship qualifications. It provides real-time data on team standings, event schedules, and qualification probabilities for district championships (DCMP) and the world championship (WCMP).
+**CMPStats** is a web application for tracking FIRST Robotics Competition (FRC) District Championship (DCMP) and World Championship (WCMP) qualifications. It provides real-time data on team standings, event schedules, and qualification probabilities for both championship levels.
 
 ![CMPStats Logo](logo.png)
 
