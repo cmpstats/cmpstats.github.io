@@ -60,6 +60,12 @@
     </table>
     
     <h2>Team Rankings (Worlds Qualification)</h2>
+    <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;">
+      <input type="text" id="teamSearch" placeholder="Search team number..." style="padding:0.5rem;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--text);">
+      <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+        <input type="checkbox" id="simplifiedView"> Show qualified only
+      </label>
+    </div>
     <div class="legend">
       <div class="legend-item"><div class="legend-dot dot-locked"></div><span>Locked (qualified)</span></div>
       <div class="legend-item"><div class="legend-dot dot-contention"></div><span>In contention</span></div>
@@ -157,61 +163,111 @@ async function loadWCMP() {
   if (!rankings || rankings.length === 0) {
     document.getElementById('ranksBody').innerHTML = '<tr><td colspan="7" class="error">No rankings available</td></tr>';
   } else {
-    // Fetch awards for all teams to check qualification
-    const teamAwards = {};
-    await Promise.all(rankings.map(async (t) => {
-      const awards = await fetchTeamAwards(t.team_key);
-      teamAwards[t.team_key] = hasQualifyingAward(awards);
-    }));
-    
-    // For WCMP, sort by DCMP points ( Worlds qualification is based on DCMP performance )
-    const worldsQualifiers = rankings.filter(t => {
-      const dcmpPts = safeNum(t.dcmp_points?.total);
-      const hasAward = teamAwards[t.team_key];
-      return dcmpPts > 0 || hasAward;
-    });
-    
-    const sorted = worldsQualifiers.sort((a,b) => safeNum(b.dcmp_points?.total) - safeNum(a.dcmp_points?.total));
-    
     // Worlds slots: approximately 1/3 of DCMP slots + award winners
     const worldsSlots = Math.floor(SLOTS / 3);
     
-    const ranksHtml = sorted.map((t,i) => {
-      const rank = i + 1;
-      const dcmp = safeNum(t.dcmp_points?.total);
-      const hasAward = teamAwards[t.team_key];
+    // For WCMP, filter by DCMP points (Worlds qualification is based on DCMP performance)
+    const worldsQualifiers = rankings.filter(t => {
+      const dcmpPts = safeNum(t.dcmp_points?.total);
+      return dcmpPts > 0;
+    }).sort((a,b) => safeNum(b.dcmp_points?.total) - safeNum(a.dcmp_points?.total));
+    
+    // Progressive loading - process in chunks
+    window.wcmpTeamData = [];
+    window.wcmpProcessed = 0;
+    const CHUNK_SIZE = 10;
+    
+    async function fetchNextChunk() {
+      const teamAwards = window.wcmpTeamAwards || {};
+      const start = window.wcmpProcessed;
+      const end = Math.min(start + CHUNK_SIZE, worldsQualifiers.length);
       
-      // WCMP qualification based on DCMP ranking
-      let status = 'eliminated';
-      if (hasAward) {
-        status = 'locked'; // Award winners auto-qualify for Worlds
-      } else if (dcmp > 0) {
-        if (rank <= worldsSlots) {
-          status = 'locked'; // Top teams from DCMP qualify
-        } else if (rank <= worldsSlots + 4) {
-          status = 'contention'; // Within striking distance
-        }
+      if (start >= worldsQualifiers.length) {
+        renderWCMPTeams();
+        document.getElementById('worldsSlots').textContent = `~${worldsSlots} + awards`;
+        return;
       }
       
-      const e1 = safe(t.event_points?.[0]?.total);
-      const e2 = safe(t.event_points?.[1]?.total);
-      const total = safe(t.point_total);
+      // Fetch awards for this chunk
+      await Promise.all(worldsQualifiers.slice(start, end).map(async (t) => {
+        const awards = await fetchTeamAwards(t.team_key);
+        teamAwards[t.team_key] = hasQualifyingAward(awards);
+      }));
+      window.wcmpTeamAwards = teamAwards;
       
-      return `<tr>
-        <td>${rank}</td>
-        <td><a href="https://www.thebluealliance.com/team/${t.team_key?.slice(3)}" target="_blank">${t.team_key?.slice(3) || '-'}</a></td>
-        <td>${e1}</td>
-        <td>${e2}</td>
-        <td>${dcmp || '-'}</td>
-        <td>${total}</td>
-        <td class="${getStatusClass(status)}">${getStatusText(status)}</td>
-      </tr>`;
-    }).join('');
+      // Add to processed data
+      for (let i = start; i < end; i++) {
+        const t = worldsQualifiers[i];
+        const dcmp = safeNum(t.dcmp_points?.total);
+        const hasAward = teamAwards[t.team_key];
+        
+        let status = 'eliminated';
+        if (hasAward) {
+          status = 'locked';
+        } else if (dcmp > 0) {
+          if (i + 1 <= worldsSlots) {
+            status = 'locked';
+          } else if (i + 1 <= worldsSlots + 4) {
+            status = 'contention';
+          }
+        }
+        
+        window.wcmpTeamData.push({
+          ...t,
+          rank: i + 1,
+          status,
+          hasAward,
+          dcmp,
+          e1: safe(t.event_points?.[0]?.total),
+          e2: safe(t.event_points?.[1]?.total),
+          total: safe(t.point_total)
+        });
+      }
+      
+      window.wcmpProcessed = end;
+      renderWCMPTeams();
+      
+      // Continue fetching next chunk
+      setTimeout(fetchNextChunk, 100);
+    }
     
-    document.getElementById('ranksBody').innerHTML = ranksHtml || '<tr><td colspan="7" class="loading">No WCMP qualified teams yet</td></tr>';
+    function renderWCMPTeams() {
+      const searchTerm = document.getElementById('teamSearch').value.toLowerCase();
+      const simplified = document.getElementById('simplifiedView').checked;
+      const teams = window.wcmpTeamData || [];
+      
+      const filtered = teams.filter(t => {
+        const teamNum = t.team_key?.slice(3) || '';
+        const matchesSearch = teamNum.includes(searchTerm);
+        if (simplified) {
+          return matchesSearch && (t.status === 'locked' || t.hasAward);
+        }
+        return matchesSearch;
+      });
+      
+      const ranksHtml = filtered.map(t => {
+        const chanceText = t.status === 'locked' ? '100%' : 
+                          t.status === 'contention' ? '~40%' : '0%';
+        return `<tr>
+          <td>${t.rank}</td>
+          <td><a href="https://www.thebluealliance.com/team/${t.team_key?.slice(3)}" target="_blank">${t.team_key?.slice(3) || '-'}</a></td>
+          <td>${t.e1}</td>
+          <td>${t.e2}</td>
+          <td>${t.dcmp || '-'}</td>
+          <td>${t.total}</td>
+          <td class="${getStatusClass(t.status)}">${getStatusText(t.status)} (${chanceText})</td>
+        </tr>`;
+      }).join('');
+      
+      const loadingMore = window.wcmpProcessed < worldsQualifiers.length ? '<tr><td colspan="7" class="loading">Loading more...</td></tr>' : '';
+      document.getElementById('ranksBody').innerHTML = filtered.length ? ranksHtml + loadingMore : '<tr><td colspan="7" class="loading">No WCMP qualified teams yet</td></tr>';
+    }
     
-    // Update Worlds slots display
-    document.getElementById('worldsSlots').textContent = `~${worldsSlots} + awards`;
+    document.getElementById('teamSearch').addEventListener('input', renderWCMPTeams);
+    document.getElementById('simplifiedView').addEventListener('change', renderWCMPTeams);
+    
+    // Start progressive loading
+    fetchNextChunk();
   }
 }
 

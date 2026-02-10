@@ -113,9 +113,9 @@ const TBA_API_KEY = 'z8FSCVQr1QXVxRFn6GgWOfmVrTtQQ1GUxvs78aCgrigr6JqQaZZRdET6AIZ
 ## Credits
 
 - **Author**: Sanchit Phadke
-- **Team**: FRC 9317 (current), FRC 5827 (former), FLL 52060
+- **Team**: FRC 9317 (current), FRC 5827 (former), FLL 52060 (former)
 - **Data Source**: [The Blue Alliance](https://www.thebluealliance.com)
-- **Inspiration**: [frclocks.com](https://frclocks.com)
+- **Inspired by**: [FRC Locks](https://frclocks.com)
 
 ## License
 

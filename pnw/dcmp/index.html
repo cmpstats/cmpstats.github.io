@@ -54,12 +54,19 @@
     </div>
     
     <h2>Events (Excluding DCMP)</h2>
+    <input type="text" id="eventSearch" placeholder="Search events..." style="width:100%;max-width:300px;padding:0.5rem;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--text);margin-bottom:1rem;">
     <table class="events-table">
       <thead><tr><th>Event</th><th>Week</th><th>Status</th><th>Type</th><th>Pts</th></tr></thead>
       <tbody id="eventsBody"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
     </table>
     
     <h2>Team Rankings</h2>
+    <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;">
+      <input type="text" id="teamSearch" placeholder="Search team number..." style="padding:0.5rem;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--text);">
+      <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+        <input type="checkbox" id="simplifiedView"> Show qualified only
+      </label>
+    </div>
     <div class="legend">
       <div class="legend-item"><div class="legend-dot dot-locked"></div><span>Locked (qualified)</span></div>
       <div class="legend-item"><div class="legend-dot dot-contention"></div><span>In contention</span></div>
@@ -140,13 +147,38 @@ async function loadDCMP() {
     document.getElementById('eventsBody').innerHTML = '<tr><td colspan="5" class="error">No events found</td></tr>';
     document.getElementById('ptsRemaining').textContent = '0';
   } else {
+    // Sort events by week
+    nonDcmpEvents.sort((a, b) => {
+      const weekA = parseInt(getWeek(a.start_date).replace('W','')) || 99;
+      const weekB = parseInt(getWeek(b.start_date).replace('W','')) || 99;
+      return weekA - weekB;
+    });
+    
     let totalPts = 0;
-    const eventsHtml = nonDcmpEvents.map(e => {
+    nonDcmpEvents.forEach(e => {
+      if (e.event_type === 1 || e.event_type === 5) totalPts += 220;
+    });
+    document.getElementById('ptsRemaining').textContent = safe(totalPts);
+    
+    window.filteredEvents = [...nonDcmpEvents];
+    renderEvents();
+  }
+  
+  function renderEvents() {
+    const searchTerm = document.getElementById('eventSearch').value.toLowerCase();
+    const events = window.filteredEvents || nonDcmpEvents;
+    const now = new Date();
+    
+    const filtered = events.filter(e => 
+      e.name.toLowerCase().includes(searchTerm) || 
+      getWeek(e.start_date).toLowerCase().includes(searchTerm)
+    );
+    
+    const eventsHtml = filtered.map(e => {
       const start = new Date(e.start_date), end = new Date(e.end_date);
       let status = 'Upcoming', pts = 220;
       if (now > end) { status = 'Done'; pts = 0; }
       else if (now >= start) { status = 'Active'; pts = 110; }
-      if (e.event_type === 1 || e.event_type === 5) totalPts += pts;
       return `<tr>
         <td><a href="https://www.thebluealliance.com/event/${e.key}" target="_blank">${e.name}</a></td>
         <td>${getWeek(e.start_date)}</td>
@@ -155,9 +187,10 @@ async function loadDCMP() {
         <td>${pts}</td>
       </tr>`;
     }).join('');
-    document.getElementById('eventsBody').innerHTML = eventsHtml;
-    document.getElementById('ptsRemaining').textContent = safe(totalPts);
+    document.getElementById('eventsBody').innerHTML = filtered.length ? eventsHtml : '<tr><td colspan="5" class="loading">No matching events</td></tr>';
   }
+  
+  document.getElementById('eventSearch').addEventListener('input', renderEvents);
   
   if (!rankings || rankings.length === 0) {
     document.getElementById('ranksBody').innerHTML = '<tr><td colspan="7" class="error">No rankings available</td></tr>';
@@ -172,7 +205,8 @@ async function loadDCMP() {
       teamAwards[t.team_key] = hasQualifyingAward(awards);
     }));
     
-    const ranksHtml = sorted.map((t,i) => {
+    // Calculate percentage chance for each team
+    window.teamData = sorted.map((t, i) => {
       const rank = i + 1;
       const cutoffIn = safeNum(sorted[SLOTS-1]?.point_total);
       const cutoffOut = safeNum(sorted[SLOTS]?.point_total);
@@ -181,37 +215,76 @@ async function loadDCMP() {
       
       let status = 'eliminated';
       const hasAward = teamAwards[t.team_key];
+      let chance = 0;
       
       if (rank <= SLOTS) {
         if (gap > totalPts || hasAward) {
           status = 'locked';
+          chance = 100;
         } else {
           status = 'contention';
+          // Simple probability based on points gap
+          chance = Math.max(50, Math.min(99, 80 - behind * 2));
         }
       } else {
         if (behind <= totalPts || hasAward) {
           status = 'contention';
+          chance = Math.max(5, Math.min(49, 30 - behind * 3));
         }
       }
       
-      if (hasAward) status = 'locked';
+      if (hasAward) {
+        status = 'locked';
+        chance = 100;
+      }
       
-      const e1 = safe(t.event_points?.[0]?.total);
-      const e2 = safe(t.event_points?.[1]?.total);
-      const bonus = safe(t.rookie_bonus);
-      const total = safe(t.point_total);
+      return {
+        ...t,
+        rank,
+        status,
+        chance,
+        hasAward,
+        e1: safe(t.event_points?.[0]?.total),
+        e2: safe(t.event_points?.[1]?.total),
+        bonus: safe(t.rookie_bonus),
+        total: safe(t.point_total)
+      };
+    });
+    
+    function renderTeams() {
+      const searchTerm = document.getElementById('teamSearch').value.toLowerCase();
+      const simplified = document.getElementById('simplifiedView').checked;
+      const teams = window.teamData || [];
       
-      return `<tr>
-        <td>${rank}</td>
-        <td><a href="https://www.thebluealliance.com/team/${t.team_key?.slice(3)}" target="_blank">${t.team_key?.slice(3) || '-'}</a></td>
-        <td>${e1}</td>
-        <td>${e2}</td>
-        <td>${bonus}</td>
-        <td>${total}</td>
-        <td class="${getStatusClass(status)}">${getStatusText(status)}</td>
-      </tr>`;
-    }).join('');
-    document.getElementById('ranksBody').innerHTML = ranksHtml;
+      const filtered = teams.filter(t => {
+        const teamNum = t.team_key?.slice(3) || '';
+        const matchesSearch = teamNum.includes(searchTerm) || 
+                              t.team_key?.toLowerCase().includes(searchTerm);
+        if (simplified) {
+          return matchesSearch && (t.status === 'locked' || t.hasAward);
+        }
+        return matchesSearch;
+      });
+      
+      const ranksHtml = filtered.map(t => {
+        const chanceText = t.status === 'locked' ? '100%' : 
+                          t.status === 'contention' ? `~${Math.round(t.chance)}%` : '0%';
+        return `<tr>
+          <td>${t.rank}</td>
+          <td><a href="https://www.thebluealliance.com/team/${t.team_key?.slice(3)}" target="_blank">${t.team_key?.slice(3) || '-'}</a></td>
+          <td>${t.e1}</td>
+          <td>${t.e2}</td>
+          <td>${t.bonus}</td>
+          <td>${t.total}</td>
+          <td class="${getStatusClass(t.status)}">${getStatusText(t.status)} (${chanceText})</td>
+        </tr>`;
+      }).join('');
+      document.getElementById('ranksBody').innerHTML = filtered.length ? ranksHtml : '<tr><td colspan="7" class="loading">No matching teams</td></tr>';
+    }
+    
+    document.getElementById('teamSearch').addEventListener('input', renderTeams);
+    document.getElementById('simplifiedView').addEventListener('change', renderTeams);
+    renderTeams();
   }
 }
 

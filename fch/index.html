@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CMPStats - Indiana</title>
+  <title>CMPStats - District</title>
   <link rel="icon" href="../logo.png" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
@@ -15,27 +15,27 @@
     .back-btn:hover { color: var(--text); }
     h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(135deg, #60a5fa, #1e40af); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 3rem; }
-    .buttons { display: flex; flex-direction: column; gap: 1.5rem; }
+    .buttons { display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 3rem; }
     .btn { background: var(--bg-card); border: 2px solid var(--accent); color: var(--text); padding: 1.5rem; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 1.25rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.75rem; }
     .btn:hover { background: var(--accent); transform: translateY(-2px); }
     .btn-icon { font-size: 1.5rem; }
+    .credits { color: var(--text-muted); font-size: 0.85rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+    .credits a { color: #60a5fa; text-decoration: none; }
+    .credits a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <div class="container">
     <a href="../index.html" class="back-btn">← back to home</a>
-    <h1>Indiana</h1>
+    <h1>Chesapeake</h1>
     <p class="subtitle">DCMP & WCMP Qualification Tracker</p>
-    
     <div class="buttons">
-      <a href="dcmp/" class="btn">
-        <span class="btn-icon">🏆</span>
-        <span>DCMP (District)</span>
-      </a>
-      <a href="wcmp/" class="btn">
-        <span class="btn-icon">🌍</span>
-        <span>WCMP (Worlds)</span>
-      </a>
+      <a href="dcmp/" class="btn"><span class="btn-icon">🏆</span><span>DCMP (District)</span></a>
+      <a href="wcmp/" class="btn"><span class="btn-icon">🌍</span><span>WCMP (Worlds)</span></a>
+    </div>
+    <div class="credits">
+      <p>Based on <a href="https://www.thebluealliance.com" target="_blank">The Blue Alliance API</a></p>
+      <p style="margin-top:0.5rem">Inspired by <a href="https://frclocks.com" target="_blank">FRC Locks</a></p>
     </div>
   </div>
 </body>
