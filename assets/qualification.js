@@ -1,6 +1,10 @@
 const TBA_API_KEY = 'z8FSCVQr1QXVxRFn6GgWOfmVrTtQQ1GUxvs78aCgrigr6JqQaZZRdET6AIZ9Gm80';
 const EVENT_TYPE_NAMES = {0:'Regional',1:'District',2:'DCMP',3:'Champs',4:'Finals',5:'Qualifier',6:'Offseason'};
 
+if (typeof PAGE_CONFIG !== 'undefined' && typeof window !== 'undefined' && !window.PAGE_CONFIG) {
+  window.PAGE_CONFIG = PAGE_CONFIG;
+}
+
 function safe(val) {
   return (val === null || val === undefined || Number.isNaN(val)) ? '-' : val;
 }
@@ -306,16 +310,17 @@ async function loadWCMP() {
 }
 
 function initQualificationPage() {
-  if (!window.PAGE_CONFIG) {
+  const config = (typeof PAGE_CONFIG !== 'undefined' ? PAGE_CONFIG : window.PAGE_CONFIG);
+  if (!config) {
     console.error('PAGE_CONFIG is required for qualification.js');
     return;
   }
-  if (PAGE_CONFIG.PAGE_TYPE === 'dcmp') {
+  if (config.PAGE_TYPE === 'dcmp') {
     loadDCMP();
-  } else if (PAGE_CONFIG.PAGE_TYPE === 'wcmp') {
+  } else if (config.PAGE_TYPE === 'wcmp') {
     loadWCMP();
   } else {
-    console.error('Unknown PAGE_TYPE', PAGE_CONFIG.PAGE_TYPE);
+    console.error('Unknown PAGE_TYPE', config.PAGE_TYPE);
   }
 }
 

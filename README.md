@@ -10,10 +10,10 @@
 - **Real-time Data**: Live data from [The Blue Alliance](https://www.thebluealliance.com) API
 - **DCMP & WCMP Tracking**: Separate pages for District Championship and World Championship qualification
 - **Color-coded Status**:
-  - 🟢 **Green**: Locked (mathematically qualified or award winner)
-  - 🟡 **Yellow**: In contention (can still qualify)
-  - 🔴 **Red**: Eliminated (cannot mathematically qualify)
-- **Freeze Logic**: Pages stop updating when events are complete, with a "✓ FROZEN" indicator
+  -  **Green**: Locked (mathematically qualified or award winner)
+  -  **Yellow**: In contention (can still qualify)
+  -  **Red**: Eliminated (cannot mathematically qualify)
+- **Freeze Logic**: Pages stop updating when events are complete, with a " FROZEN" indicator
 - **Award Detection**: Teams qualifying via Chairman's Award, Engineering Inspiration, or Rookie All-Star are marked as locked
 - **Responsive Design**: Works on desktop and mobile devices
 
