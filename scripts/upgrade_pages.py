@@ -1,3 +1,4 @@
+import json
 import re
 from pathlib import Path
 
@@ -28,7 +29,7 @@ for path in paths:
     ]
     if page_type == 'wcmp':
         awards += ["District Championship Chairman's Award", "District Championship Engineering Inspiration Award"]
-    awards_list = ', '.join([f"'{a}'" for a in awards])
+    awards_list = ', '.join([json.dumps(a) for a in awards])
     if page_type == 'dcmp':
         body = f'''<!doctype html>
 <html lang="en">
